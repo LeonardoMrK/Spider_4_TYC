@@ -40,10 +40,10 @@ class Get_company_info(object):
         #print(self.browser.page_source)#打印源码
         self.url_dic={
                       'get_login': '/html/body/div[1]/div/div[1]/div[1]/div/div/div[2]/div/div[4]/a',
-                      'login_user_pwd': '/html/body/div[9]/div[2]/div/div[2]/div/div/div[3]/div[1]/div[2]',
-                      'login_user': '/html/body/div[9]/div[2]/div/div[2]/div/div/div[3]/div[2]/div[2]/input',
-                      'submit': '/html/body/div[9]/div[2]/div/div[2]/div/div/div[3]/div[2]/div[5]',
-                      'login_pwd': '/html/body/div[9]/div[2]/div/div[2]/div/div/div[3]/div[2]/div[3]/input',
+                      'login_user_pwd': '/html/body/div[9]/div[2]/div/div[2]/div/div/div[3]/div[3]/div[1]/div[2]',
+                      'login_user': '/html/body/div[9]/div[2]/div/div[2]/div/div/div[3]/div[3]/div[2]/form/div[1]/div[1]/input',
+                      'submit': '/html/body/div[9]/div[2]/div/div[2]/div/div/div[3]/div[3]/div[2]/div[2]',
+                      'login_pwd': '/html/body/div[9]/div[2]/div/div[2]/div/div/div[3]/div[3]/div[2]/form/div[2]/input',
                       'search':'/html/body/div[1]/div/div[1]/div[2]/div/div/div[2]/div[2]/div[1]/form/div/input',
                       'search_button':'/html/body/div[1]/div/div[1]/div[2]/div/div/div[2]/div[2]/div[1]/div',
                       'company_list':'/html/body/div[2]/div/div[1]/div[4]/div[2]'
@@ -87,9 +87,12 @@ class Get_company_info(object):
         input_company_name.send_keys(Keys.ENTER)#再页面用按回车进入搜索，用click会出问题
 
 ########################################################
+        #获取所有页码，以及当前页码
         currentPageUrl = self.browser.current_url
         print("当前页面的url是：", currentPageUrl)
-        #从search后拆分，将url分成两部分，好进行翻页
+        #从search后拆分，由于搜索采用的是get请求，因此以？为分隔将url分成两部分（注意汉字被加密成了16进制）
+        #第一页：https://www.tianyancha.com/search?key=%E5%AD%97%E8%8A%82%E8%B7%B3%E5%8A%A8
+        #第n页：https://www.tianyancha.com/search/p2?key=%E5%AD%97%E8%8A%82%E8%B7%B3%E5%8A%A8
 ########################################################
 
         company_list=self.browser.find_elements_by_xpath('.//div[contains(@class, "header")][1]/a[1]')#获取搜索页面的所有公司div,以list形式存，注意一定是elements
@@ -99,13 +102,17 @@ class Get_company_info(object):
             href=each.get_attribute('href')#获取超链
             href_list.append(href)
 
-        # print(href_list)
+        #print(href_list)
         for each in href_list:
             time.sleep(0.5)
             self.browser.get(each)#进入公司详情页
             company=self.save_company_info()#保存信息
-            print(company)
-            break
+            # print(company)  # 此时格式为str
+            company=company.split("\n")#按照行分离，此时变为list格式
+            company.pop()#弹出最后一个没用的空白元素
+            print(company)#此时格式为list
+            print(len(company))#一共7个有效元素，依次为公司名、电话、email、网址、地址、简介、经营范围
+            break#如果用于测试，只想爬取一个网页，直接在此break即可
 
 
     def save_company_info(self):
@@ -176,6 +183,7 @@ def information_filter():
     根据经营范围内的关键字对数据进行筛选
     :return:
     """
+    #list中的第七个元素是简介信息，在这里面进行关键词的匹配
     pass
 
 def information_class():
@@ -183,6 +191,7 @@ def information_class():
     根据公司地址对数据进行分类保存
     :return:
     """
+    #list中的第五个元素就是地址，直接在这里面进行省市的匹配，就可以返回地址了
     pass
 #############################################
 
