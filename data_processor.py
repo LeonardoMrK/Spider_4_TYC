@@ -17,8 +17,8 @@ plt.rcParams['font.sans-serif'] = ['SimHei']#绘图时显示中文
 #plt.rcParams['axes.unicode_minus'] = False
 
 
-data_file_path='E:\pycharmworkspace\Spider_4_TYC-master\input\comerge_data.xlsx'#所有数据，已经去重
-save_file_path='E:\pycharmworkspace\Spider_4_TYC-master\output\output_comerge_data.xlsx'
+data_file_path='E:\pycharmworkspace\Spider_4_TYC\input\\test.xlsx'#所有数据，已经去重
+save_file_path='E:\pycharmworkspace\Spider_4_TYC\output\\test.xlsx'
 
 
 # sheets = book.sheetnames# 从工作薄中获取一个表单(sheet)对象
@@ -146,12 +146,12 @@ def figure_genertor(excel_file):
 
 if __name__=='__main__':
     #得到表格数据
-    # raw_datas=read_data(data_file_path)#第一步，对原始语料进行预处理，获取raw_data
-    # first_time=filter_by_tele(raw_datas)#根据电话号码对数据初步筛选
-    # #second_time=filter_by_domain(first_time)#根据经营范围对数据再次筛选
-    # print('数据总数',len(first_time))#最终所得的数据总数
-    # city_dic=information_stat_by_province(first_time)#根据筛选后的数据获取一对多的city统计dic
-    # save_baseon_province(city_dic,first_time)#按照一个城市一个sheet保存数据
+    raw_datas=read_data(data_file_path)#第一步，对原始语料进行预处理，获取raw_data
+    first_time=filter_by_tele(raw_datas)#根据电话号码对数据初步筛选
+    #second_time=filter_by_domain(first_time)#根据经营范围对数据再次筛选
+    print('数据总数',len(first_time))#最终所得的数据总数
+    city_dic=information_stat_by_province(first_time)#根据筛选后的数据获取一对多的city统计dic
+    save_baseon_province(city_dic,first_time)#按照一个城市一个sheet保存数据
 
     #绘图(可以修改一下生成的excel文件中的‘总结’sheet中的数据在出图)
     figure_genertor(save_file_path)#根据保存的数据绘制饼图
