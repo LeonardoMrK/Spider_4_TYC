@@ -16,9 +16,11 @@ from collections import defaultdict
 plt.rcParams['font.sans-serif'] = ['SimHei']#绘图时显示中文
 #plt.rcParams['axes.unicode_minus'] = False
 
-
-data_file_path='E:\pycharmworkspace\Spider_4_TYC\input\\test.xlsx'#所有数据，已经去重
-save_file_path='E:\pycharmworkspace\Spider_4_TYC\output\\test.xlsx'
+#待处理数据路径，文件格式要求为xlsx，数据需要事先去重处理，并将空白单元格内填充“None”
+# data_file_path='input\\2020.2.26\\comerge_data.xlsx'
+data_file_path='E:\pycharmworkspace\Spider_4_TYC\input\\new_data\直辖市\comerge_data.xlsx'
+#处理后数据保存路径
+save_file_path='output\\comerge_data.xlsx'
 
 
 # sheets = book.sheetnames# 从工作薄中获取一个表单(sheet)对象
@@ -60,7 +62,8 @@ def filter_by_tele(result_list):
     final_result = []  # 最终筛选后的数据
     for i in range(len(result_list)):#依次获取每组数据
         temp_list=result_list[i].split('$')#将每一组数据split并重新存为list格式,每行5个属性，分别为0index，1name，2province，3city，4tele，5domain
-        if temp_list[4]!='None' and len(temp_list[4])==11:#保存非空号码以及手机号码对应的数据
+        if temp_list[4]!='None' and len(temp_list[4])==11:#仅获取手机号码数据
+        #if temp_list[4] != 'None':  #只要非空，就都获取
             final_result.append(result_list[i])
     print('after_filted_by_tele总数',len(final_result))  # 筛选后一共2609组数据
     return final_result
