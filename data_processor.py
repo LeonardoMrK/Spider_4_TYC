@@ -10,10 +10,17 @@
 
 import re
 import openpyxl
+import pandas as pd
+import matplotlib.pyplot as plt
 from collections import defaultdict
+plt.rcParams['font.sans-serif'] = ['SimHei']#绘图时显示中文
+#plt.rcParams['axes.unicode_minus'] = False
 
-data_file_path='D:\project\pycharmworkspace\Spider_4_TYC\\教育科技.xlsx'
-
+#待处理数据路径，文件格式要求为xlsx，数据需要事先去重处理，并将空白单元格内填充“None”
+# data_file_path='input\\2020.2.26\\comerge_data.xlsx'
+data_file_path='E:\pycharmworkspace\Spider_4_TYC\input\\new_data\直辖市\comerge_data.xlsx'
+#处理后数据保存路径
+save_file_path='output\\comerge_data.xlsx'
 
 
 # sheets = book.sheetnames# 从工作薄中获取一个表单(sheet)对象
@@ -55,9 +62,10 @@ def filter_by_tele(result_list):
     final_result = []  # 最终筛选后的数据
     for i in range(len(result_list)):#依次获取每组数据
         temp_list=result_list[i].split('$')#将每一组数据split并重新存为list格式,每行5个属性，分别为0index，1name，2province，3city，4tele，5domain
-        if temp_list[4]!='None' and len(temp_list[4])==11:#保存非空号码以及手机号码对应的数据
+        if temp_list[4]!='None' and len(temp_list[4])==11:#仅获取手机号码数据
+        #if temp_list[4] != 'None':  #只要非空，就都获取
             final_result.append(result_list[i])
-    print('filter_by_tele总数',len(final_result))  # 筛选后一共2609组数据
+    print('after_filted_by_tele总数',len(final_result))  # 筛选后一共2609组数据
     return final_result
 
 
@@ -76,7 +84,7 @@ def filter_by_domain(result_list):
         flag2 = re.findall('培训',temp_list[5])#从domain属性中用正则匹配看是否含有
         if flag1 or flag2:
             final_result.append(result_list[i])
-    print('filter_by_domain总数', len(final_result))  # 筛选后一共2609组数据
+    print('after_filted_by_domain总数', len(final_result))  # 筛选后一共2609组数据
     return final_result
 
 
@@ -106,23 +114,47 @@ def save_baseon_province(dict,result_list):
     :return: None
     """
     book=openpyxl.Workbook()#创建一个工作薄
+    summary=[]#存放总结用数据的容器
     for key_city in dict:#遍历字典中的所有城市
         data_excel = []  # 待存入表的数据容器
         sheet = book.create_sheet(key_city)  # 创建一个新的sheet并将新的sheet表名称改为城市名
         sheet['A1']='公司名称'#插入表头
         sheet['B1']='公司电话'
+        sheet['C1']='数量总计'
         indexs_of_each_city=dict[key_city]#获取字典中每个city对应的所有索引，
         #print(indexs_of_each_city)#一个城市对应的多个索引，以list格式保存
+        sheet['D1']=len(indexs_of_each_city)#每个城市对应的sheet上边标出当页数据总量
+        summary.append([key_city,len(indexs_of_each_city)])#将总结数据存入代存容器
         for each_index in indexs_of_each_city:#对每个city下的多个索引依次遍历处理
             temp_list=result_list[each_index].split('$')#split为5个属性0index，1name，2province，3city，4tele，5domain
             data_excel.append([temp_list[1],temp_list[4]])#将公司名称与电话号码放入待存入表的容器
         for each in data_excel:#所有数据提取完后，统一存入表中
             sheet.append(each)
-    book.save('output.xlsx')
+
+    summary_sheet=book.create_sheet('总结')#创建总结sheet
+    summary_sheet['A1']='省份'#添加表头
+    summary_sheet['B1']='总数'
+    for each in summary:
+        summary_sheet.append(each)#将总结信息存入sheet
+    book.save(save_file_path)
+
+def figure_genertor(excel_file):
+    summary=pd.read_excel(excel_file,sheetname='总结',index_col='省份')#读取excle文件中的“总结”sheet，以“省份”对应的列的内容为数据标签
+    #print(summary)#读取excel表格数据
+    summary['总数'].plot.pie(subplots=True,figsize=(6, 6),autopct='%.2f')#绘制饼图，以“总数”对应的列的内容为数据绘制饼图，同时设置“总数”为饼图标题
+    plt.show()
+    summary['总数'].plot.bar()#绘制直方图，以“总数”对应的列的内容为数据绘制直方图
+    plt.show()
 
 
-raw_datas=read_data(data_file_path)#第一步，对原始语料进行预处理，获取raw_data
-first_time=filter_by_tele(raw_datas)#根据电话号码对数据初步筛选
-second_time=filter_by_domain(first_time)#根据经营范围对数据再次筛选
-city_dic=information_stat_by_province(second_time)#根据筛选后的数据获取一对多的city统计dic
-save_baseon_province(city_dic,second_time)#按照一个城市一个sheet保存数据
+if __name__=='__main__':
+    #得到表格数据
+    raw_datas=read_data(data_file_path)#第一步，对原始语料进行预处理，获取raw_data
+    first_time=filter_by_tele(raw_datas)#根据电话号码对数据初步筛选
+    #second_time=filter_by_domain(first_time)#根据经营范围对数据再次筛选
+    print('数据总数',len(first_time))#最终所得的数据总数
+    city_dic=information_stat_by_province(first_time)#根据筛选后的数据获取一对多的city统计dic
+    save_baseon_province(city_dic,first_time)#按照一个城市一个sheet保存数据
+
+    #绘图(可以修改一下生成的excel文件中的‘总结’sheet中的数据在出图)
+    figure_genertor(save_file_path)#根据保存的数据绘制饼图
